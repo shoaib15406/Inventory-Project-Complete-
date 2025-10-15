@@ -1,0 +1,163 @@
+<div class="reports-container">
+  <div class="header">
+    <h1>Reports & Analytics</h1>
+    <p>Generate comprehensive reports for your inventory</p>
+  </div>
+
+  <mat-tab-group>
+    <mat-tab label="Stock Reports">
+      <div class="tab-content">
+        <div class="report-grid">
+          <mat-card class="report-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>inventory</mat-icon>
+                Stock Level Report
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Current stock levels for all products with minimum and maximum thresholds.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button color="primary" (click)="generateReport('stock-level')">
+                <mat-icon>download</mat-icon>
+                Generate Report
+              </button>
+            </mat-card-actions>
+          </mat-card>
+
+          <mat-card class="report-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>warning</mat-icon>
+                Low Stock Alert
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Products that are below minimum stock levels and need restocking.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button color="warn" (click)="generateReport('low-stock')">
+                <mat-icon>download</mat-icon>
+                Generate Report
+              </button>
+            </mat-card-actions>
+          </mat-card>
+
+          <mat-card class="report-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>attach_money</mat-icon>
+                Inventory Valuation
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Total value of inventory based on cost price and selling price.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button color="accent" (click)="generateReport('valuation')">
+                <mat-icon>download</mat-icon>
+                Generate Report
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Movement Reports">
+      <div class="tab-content">
+        <div class="report-grid">
+          <mat-card class="report-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>trending_up</mat-icon>
+                Stock Movement History
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Detailed history of all stock movements including in, out, and adjustments.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button color="primary" (click)="generateReport('movement')">
+                <mat-icon>download</mat-icon>
+                Generate Report
+              </button>
+            </mat-card-actions>
+          </mat-card>
+
+          <mat-card class="report-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>bar_chart</mat-icon>
+                Monthly Summary
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Monthly summary of stock movements, additions, and consumption patterns.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button color="primary" (click)="generateReport('monthly')">
+                <mat-icon>download</mat-icon>
+                Generate Report
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Supplier Reports">
+      <div class="tab-content">
+        <div class="report-grid">
+          <mat-card class="report-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>business</mat-icon>
+                Supplier Performance
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Performance metrics for all suppliers including delivery times and quality ratings.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button color="primary" (click)="generateReport('supplier-performance')">
+                <mat-icon>download</mat-icon>
+                Generate Report
+              </button>
+            </mat-card-actions>
+          </mat-card>
+
+          <mat-card class="report-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>shopping_cart</mat-icon>
+                Purchase Orders
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Summary of all purchase orders, pending deliveries, and order history.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button color="primary" (click)="generateReport('purchase-orders')">
+                <mat-icon>download</mat-icon>
+                Generate Report
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <div class="loading-overlay" *ngIf="loading()">
+    <mat-card>
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-icon>hourglass_empty</mat-icon>
+          <p>Generating report...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

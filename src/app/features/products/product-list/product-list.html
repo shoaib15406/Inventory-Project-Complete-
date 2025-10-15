@@ -1,0 +1,118 @@
+<div class="product-list-container">
+  <div class="header">
+    <h1>Products</h1>
+    <button mat-raised-button color="primary" (click)="onAddProduct()">
+      <mat-icon>add</mat-icon>
+      Add Product
+    </button>
+  </div>
+
+  <mat-card *ngIf="!loading() && products().length > 0">
+    <mat-card-content>
+      <table mat-table [dataSource]="products()" class="product-table">
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Product Name</th>
+          <td mat-cell *matCellDef="let product">
+            <div class="product-info">
+              <strong>{{ product.name }}</strong>
+              <p class="product-description">{{ product.description }}</p>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- SKU Column -->
+        <ng-container matColumnDef="sku">
+          <th mat-header-cell *matHeaderCellDef>SKU</th>
+          <td mat-cell *matCellDef="let product">{{ product.sku }}</td>
+        </ng-container>
+
+        <!-- Category Column -->
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef>Category</th>
+          <td mat-cell *matCellDef="let product">{{ product.category }}</td>
+        </ng-container>
+
+        <!-- Stock Column -->
+        <ng-container matColumnDef="stock">
+          <th mat-header-cell *matHeaderCellDef>Stock</th>
+          <td mat-cell *matCellDef="let product">
+            <span [class]="getStockStatus(product)">
+              {{ product.currentStock }} {{ product.unit }}
+            </span>
+            <div class="stock-levels">
+              <small>Min: {{ product.minStockLevel }} | Max: {{ product.maxStockLevel }}</small>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Price Column -->
+        <ng-container matColumnDef="price">
+          <th mat-header-cell *matHeaderCellDef>Price</th>
+          <td mat-cell *matCellDef="let product">
+            <div class="price-info">
+              <div>Cost: ${{ product.costPrice }}</div>
+              <div>Sell: ${{ product.sellingPrice }}</div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let product">
+            <span class="status-badge" [class]="getStockStatus(product)">
+              {{ getStockStatusText(product) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let product">
+            <button mat-icon-button (click)="onViewProduct(product.id)" matTooltip="View Product">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button (click)="onEditProduct(product.id)" matTooltip="Edit Product">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="onDeleteProduct(product)" matTooltip="Delete Product">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="loading-container" *ngIf="loading()">
+    <mat-card>
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-icon>inventory</mat-icon>
+          <p>Loading products...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="empty-state" *ngIf="!loading() && products().length === 0">
+    <mat-card>
+      <mat-card-content>
+        <div class="empty-content">
+          <mat-icon>inventory_2</mat-icon>
+          <h2>No Products Found</h2>
+          <p>Get started by adding your first product to the inventory.</p>
+          <button mat-raised-button color="primary" (click)="onAddProduct()">
+            <mat-icon>add</mat-icon>
+            Add First Product
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

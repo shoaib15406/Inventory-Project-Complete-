@@ -1,0 +1,156 @@
+.inventory-overview-container {
+  padding: 24px;
+
+  .header {
+    margin-bottom: 24px;
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 500;
+      color: #333;
+    }
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+
+    .stat-card {
+      .stat-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        mat-icon {
+          font-size: 36px;
+          width: 36px;
+          height: 36px;
+          color: #666;
+        }
+
+        .stat-info {
+          display: flex;
+          flex-direction: column;
+
+          .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+          }
+
+          .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+          }
+        }
+      }
+
+      &.total-products mat-icon {
+        color: #2196f3;
+      }
+
+      &.total-value mat-icon {
+        color: #4caf50;
+      }
+
+      &.low-stock mat-icon {
+        color: #ff9800;
+      }
+
+      &.out-of-stock mat-icon {
+        color: #f44336;
+      }
+    }
+  }
+
+  .alerts-card {
+    .tab-content {
+      padding: 16px 0;
+
+      .inventory-table {
+        width: 100%;
+
+        .stock-level {
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-weight: 500;
+
+          &.low-stock {
+            background: #fff3e0;
+            color: #e65100;
+          }
+
+          &.out-of-stock {
+            background: #ffebee;
+            color: #c62828;
+          }
+        }
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 48px 24px;
+        color: #666;
+
+        mat-icon {
+          font-size: 48px;
+          width: 48px;
+          height: 48px;
+          color: #4caf50;
+          margin-bottom: 16px;
+        }
+
+        p {
+          margin: 0;
+          font-size: 1.1rem;
+        }
+      }
+    }
+  }
+
+  .loading-container {
+    text-align: center;
+    padding: 48px 24px;
+
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: #666;
+        animation: pulse 2s infinite;
+      }
+
+      p {
+        color: #666;
+        font-size: 1.1rem;
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .inventory-overview-container {
+    padding: 16px;
+
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

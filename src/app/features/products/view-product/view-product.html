@@ -1,0 +1,201 @@
+<div class="view-product-container" *ngIf="!loading() && product()">
+  <div class="header">
+    <button mat-icon-button (click)="onBack()" class="back-button">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="header-info">
+      <h1>{{ product()?.name }}</h1>
+      <div class="header-actions">
+        <button mat-raised-button color="primary" (click)="onEdit()">
+          <mat-icon>edit</mat-icon>
+          Edit Product
+        </button>
+        <button mat-raised-button color="warn" (click)="onDelete()">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="product-content">
+    <!-- Basic Information -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>Product Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Product Name:</label>
+            <span>{{ product()?.name }}</span>
+          </div>
+          <div class="info-item">
+            <label>SKU:</label>
+            <span class="sku-badge">{{ product()?.sku }}</span>
+          </div>
+          <div class="info-item">
+            <label>Category:</label>
+            <span>{{ product()?.category }}</span>
+          </div>
+          <div class="info-item">
+            <label>Unit:</label>
+            <span>{{ product()?.unit }}</span>
+          </div>
+          <div class="info-item">
+            <label>Status:</label>
+            <mat-chip [color]="getStatusChipColor(product()?.status || 'active')" selected>
+              {{ product()?.status | titlecase }}
+            </mat-chip>
+          </div>
+          <div class="info-item">
+            <label>Supplier:</label>
+            <span>{{ product()?.supplierName || 'Not assigned' }}</span>
+          </div>
+        </div>
+        
+        <mat-divider class="section-divider"></mat-divider>
+        
+        <div class="description-section">
+          <label>Description:</label>
+          <p class="description">{{ product()?.description || 'No description available' }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Pricing Information -->
+    <mat-card class="pricing-card">
+      <mat-card-header>
+        <mat-card-title>Pricing</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="pricing-grid">
+          <div class="price-item">
+            <mat-icon>shopping_cart</mat-icon>
+            <div class="price-info">
+              <label>Cost Price</label>
+              <span class="price">${{ product()?.costPrice | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="price-item">
+            <mat-icon>sell</mat-icon>
+            <div class="price-info">
+              <label>Selling Price</label>
+              <span class="price">${{ product()?.sellingPrice | number:'1.2-2' }}</span>
+            </div>
+          </div>
+          <div class="price-item profit-margin">
+            <mat-icon>trending_up</mat-icon>
+            <div class="price-info">
+              <label>Profit Margin</label>
+              <span class="margin" [class.positive]="getProfitMargin(product()!) > 0" [class.negative]="getProfitMargin(product()!) < 0">
+                {{ getProfitMargin(product()!) | number:'1.1-1' }}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Stock Information -->
+    <mat-card class="stock-card">
+      <mat-card-header>
+        <mat-card-title>Stock Information</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stock-overview">
+          <div class="current-stock">
+            <div class="stock-number">
+              <span class="quantity">{{ product()?.currentStock }}</span>
+              <span class="unit">{{ product()?.unit }}</span>
+            </div>
+            <mat-chip [color]="getStockStatusColor(product()!)" selected>
+              {{ getStockStatusText(product()!) }}
+            </mat-chip>
+          </div>
+        </div>
+        
+        <mat-divider class="section-divider"></mat-divider>
+        
+        <div class="stock-levels">
+          <div class="level-item">
+            <label>Minimum Level:</label>
+            <span>{{ product()?.minStockLevel }} {{ product()?.unit }}</span>
+          </div>
+          <div class="level-item">
+            <label>Maximum Level:</label>
+            <span>{{ product()?.maxStockLevel }} {{ product()?.unit }}</span>
+          </div>
+        </div>
+
+        <div class="stock-progress">
+          <label>Stock Level Progress:</label>
+          <div class="progress-bar">
+            <div class="progress-fill" 
+                 [style.width.%]="(product()?.currentStock! / product()?.maxStockLevel!) * 100"
+                 [class]="getStockStatus(product()!)">
+            </div>
+          </div>
+          <div class="progress-labels">
+            <span>0</span>
+            <span>{{ product()?.maxStockLevel }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Additional Details -->
+    <mat-card class="details-card">
+      <mat-card-header>
+        <mat-card-title>Additional Details</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="details-grid">
+          <div class="detail-item">
+            <label>Created Date:</label>
+            <span>{{ product()?.createdDate | date:'medium' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Last Updated:</label>
+            <span>{{ product()?.updatedDate | date:'medium' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="product()?.barcode">
+            <label>Barcode:</label>
+            <span class="barcode">{{ product()?.barcode }}</span>
+          </div>
+          <div class="detail-item" *ngIf="product()?.location">
+            <label>Location:</label>
+            <span>{{ product()?.location }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<div class="loading-container" *ngIf="loading()">
+  <mat-card>
+    <mat-card-content>
+      <div class="loading-content">
+        <mat-icon>hourglass_empty</mat-icon>
+        <p>Loading product details...</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<div class="error-container" *ngIf="!loading() && !product()">
+  <mat-card>
+    <mat-card-content>
+      <div class="error-content">
+        <mat-icon>error_outline</mat-icon>
+        <h2>Product Not Found</h2>
+        <p>The requested product could not be found.</p>
+        <button mat-raised-button color="primary" (click)="onBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to Products
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

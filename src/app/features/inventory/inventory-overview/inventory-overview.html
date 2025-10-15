@@ -1,0 +1,214 @@
+<div class="inventory-overview-container">
+  <div class="header">
+    <h1>Inventory Overview</h1>
+  </div>
+
+  <!-- Inventory Stats -->
+  <div class="stats-grid" *ngIf="!loading()">
+    <mat-card class="stat-card total-products">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon>inventory</mat-icon>
+          <div class="stat-info">
+            <span class="stat-number">{{ totalProducts() }}</span>
+            <span class="stat-label">Total Products</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card total-value">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon>attach_money</mat-icon>
+          <div class="stat-info">
+            <span class="stat-number">${{ totalValue() | number:'1.0-0' }}</span>
+            <span class="stat-label">Total Inventory Value</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card low-stock">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon matBadge="{{ lowStockCount() }}" matBadgeColor="warn">warning</mat-icon>
+          <div class="stat-info">
+            <span class="stat-number">{{ lowStockCount() }}</span>
+            <span class="stat-label">Low Stock Items</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card out-of-stock">
+      <mat-card-content>
+        <div class="stat-content">
+          <mat-icon matBadge="{{ outOfStockCount() }}" matBadgeColor="warn">remove_shopping_cart</mat-icon>
+          <div class="stat-info">
+            <span class="stat-number">{{ outOfStockCount() }}</span>
+            <span class="stat-label">Out of Stock</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Stock Alerts Tabs -->
+  <mat-card class="alerts-card" *ngIf="!loading()">
+    <mat-card-header>
+      <mat-card-title>Stock Alerts</mat-card-title>
+      <mat-card-subtitle>Items requiring attention</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <mat-tab-group>
+        <!-- Low Stock Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>warning</mat-icon>
+            Low Stock ({{ lowStockCount() }})
+          </ng-template>
+          
+          <div class="tab-content">
+            <table mat-table [dataSource]="lowStockProducts()" class="inventory-table" *ngIf="lowStockProducts().length > 0">
+              <!-- Name Column -->
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Product Name</th>
+                <td mat-cell *matCellDef="let product">{{ product.name }}</td>
+              </ng-container>
+
+              <!-- SKU Column -->
+              <ng-container matColumnDef="sku">
+                <th mat-header-cell *matHeaderCellDef>SKU</th>
+                <td mat-cell *matCellDef="let product">{{ product.sku }}</td>
+              </ng-container>
+
+              <!-- Category Column -->
+              <ng-container matColumnDef="category">
+                <th mat-header-cell *matHeaderCellDef>Category</th>
+                <td mat-cell *matCellDef="let product">{{ product.category }}</td>
+              </ng-container>
+
+              <!-- Current Stock Column -->
+              <ng-container matColumnDef="currentStock">
+                <th mat-header-cell *matHeaderCellDef>Current Stock</th>
+                <td mat-cell *matCellDef="let product">
+                  <span class="stock-level low-stock">{{ product.currentStock }} {{ product.unit }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Min Level Column -->
+              <ng-container matColumnDef="minLevel">
+                <th mat-header-cell *matHeaderCellDef>Min Level</th>
+                <td mat-cell *matCellDef="let product">{{ product.minStockLevel }} {{ product.unit }}</td>
+              </ng-container>
+
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let product">
+                  <button mat-button color="primary" (click)="onReorder(product)">
+                    <mat-icon>shopping_cart</mat-icon>
+                    Reorder
+                  </button>
+                  <button mat-button (click)="onAdjustStock(product)">
+                    <mat-icon>edit</mat-icon>
+                    Adjust
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+
+            <div class="empty-state" *ngIf="lowStockProducts().length === 0">
+              <mat-icon>check_circle</mat-icon>
+              <p>No low stock items. All products are above minimum levels!</p>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Out of Stock Tab -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>remove_shopping_cart</mat-icon>
+            Out of Stock ({{ outOfStockCount() }})
+          </ng-template>
+          
+          <div class="tab-content">
+            <table mat-table [dataSource]="outOfStockProducts()" class="inventory-table" *ngIf="outOfStockProducts().length > 0">
+              <!-- Name Column -->
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Product Name</th>
+                <td mat-cell *matCellDef="let product">{{ product.name }}</td>
+              </ng-container>
+
+              <!-- SKU Column -->
+              <ng-container matColumnDef="sku">
+                <th mat-header-cell *matHeaderCellDef>SKU</th>
+                <td mat-cell *matCellDef="let product">{{ product.sku }}</td>
+              </ng-container>
+
+              <!-- Category Column -->
+              <ng-container matColumnDef="category">
+                <th mat-header-cell *matHeaderCellDef>Category</th>
+                <td mat-cell *matCellDef="let product">{{ product.category }}</td>
+              </ng-container>
+
+              <!-- Current Stock Column -->
+              <ng-container matColumnDef="currentStock">
+                <th mat-header-cell *matHeaderCellDef>Current Stock</th>
+                <td mat-cell *matCellDef="let product">
+                  <span class="stock-level out-of-stock">{{ product.currentStock }} {{ product.unit }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Min Level Column -->
+              <ng-container matColumnDef="minLevel">
+                <th mat-header-cell *matHeaderCellDef>Min Level</th>
+                <td mat-cell *matCellDef="let product">{{ product.minStockLevel }} {{ product.unit }}</td>
+              </ng-container>
+
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let product">
+                  <button mat-raised-button color="warn" (click)="onReorder(product)">
+                    <mat-icon>shopping_cart</mat-icon>
+                    Urgent Reorder
+                  </button>
+                  <button mat-button (click)="onAdjustStock(product)">
+                    <mat-icon>edit</mat-icon>
+                    Adjust
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+
+            <div class="empty-state" *ngIf="outOfStockProducts().length === 0">
+              <mat-icon>check_circle</mat-icon>
+              <p>No out of stock items. All products are available!</p>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading()">
+    <mat-card>
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-icon>hourglass_empty</mat-icon>
+          <p>Loading inventory data...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

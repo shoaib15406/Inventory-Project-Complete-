@@ -1,0 +1,105 @@
+<div class="app-header">
+  <div class="header-container">
+    <div class="header-left">
+      <button mat-icon-button class="menu-button">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <div class="brand-section">
+        <div class="brand-icon">
+          <mat-icon>inventory_2</mat-icon>
+        </div>
+        <div class="brand-text">
+          <h1 class="app-title">InventoryPro</h1>
+          <p class="app-subtitle">Management System</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="search-bar">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput placeholder="Search products, suppliers..." />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- Quick Actions -->
+      <button mat-icon-button class="action-button" matTooltip="Add Product">
+        <mat-icon>add_circle_outline</mat-icon>
+      </button>
+
+      <!-- Notifications -->
+      <button mat-icon-button [matMenuTriggerFor]="notificationMenu" class="notification-button">
+        <mat-icon [matBadge]="unreadCount() > 0 ? unreadCount() : null" 
+                  matBadgeColor="warn"
+                  matBadgeSize="small">
+          notifications_none
+        </mat-icon>
+      </button>
+
+      <!-- User Profile -->
+      <div class="user-profile" [matMenuTriggerFor]="userMenu">
+        <div class="user-avatar">
+          <mat-icon>person</mat-icon>
+        </div>
+        <div class="user-info" *ngIf="currentUser()">
+          <span class="user-name">{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</span>
+          <span class="user-role">{{ currentUser()?.role }}</span>
+        </div>
+        <mat-icon class="dropdown-icon">keyboard_arrow_down</mat-icon>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Menu -->
+<mat-menu #notificationMenu="matMenu" class="notification-menu">
+  <div class="notification-header">
+    <h3>Notifications</h3>
+    <button mat-button (click)="markAllNotificationsRead()" *ngIf="unreadCount() > 0">
+      Mark all read
+    </button>
+  </div>
+  
+  <div class="notification-list" *ngIf="notifications().length > 0; else noNotifications">
+    <button mat-menu-item 
+            *ngFor="let notification of notifications()" 
+            (click)="viewNotification(notification)"
+            [class.unread]="!notification.isRead">
+      <mat-icon [color]="getNotificationColor(notification.type)">
+        {{ getNotificationIcon(notification.type) }}
+      </mat-icon>
+      <div class="notification-content">
+        <div class="notification-title">{{ notification.title }}</div>
+        <div class="notification-message">{{ notification.message }}</div>
+        <div class="notification-time">{{ notification.timestamp | date:'short' }}</div>
+      </div>
+    </button>
+  </div>
+  
+  <ng-template #noNotifications>
+    <div class="no-notifications">
+      <mat-icon>notifications_none</mat-icon>
+      <p>No notifications</p>
+    </div>
+  </ng-template>
+</mat-menu>
+
+<!-- User Menu -->
+<mat-menu #userMenu="matMenu">
+  <button mat-menu-item (click)="viewProfile()">
+    <mat-icon>person</mat-icon>
+    <span>Profile</span>
+  </button>
+  <button mat-menu-item>
+    <mat-icon>settings</mat-icon>
+    <span>Settings</span>
+  </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    <span>Logout</span>
+  </button>
+</mat-menu>

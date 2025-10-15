@@ -1,0 +1,35 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <mat-icon class="logo-icon">inventory_2</mat-icon>
+      <h2>Inventory</h2>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-list">
+      <a 
+        *ngFor="let item of navigationItems"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        class="nav-item"
+        [class.hidden]="!canShowItem(item)">
+        
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span>{{ item.label }}</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer" *ngIf="currentUser()">
+    <div class="user-info">
+      <div class="user-avatar">
+        <mat-icon>account_circle</mat-icon>
+      </div>
+      <div class="user-details">
+        <div class="user-name">{{ currentUser()?.firstName }} {{ currentUser()?.lastName }}</div>
+        <div class="user-role">{{ currentUser()?.role | titlecase }}</div>
+      </div>
+    </div>
+  </div>
+</div>

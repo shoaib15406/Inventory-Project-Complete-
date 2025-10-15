@@ -1,0 +1,82 @@
+<div class="login-container">
+  <div class="login-card-wrapper">
+    <mat-card class="login-card">
+      <mat-card-header>
+        <div class="login-header">
+          <h1>Inventory Management System</h1>
+          <p>Sign in to your account</p>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Username</mat-label>
+            <input matInput formControlName="username" required>
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-error *ngIf="loginForm.get('username')?.hasError('required')">
+              Username is required
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input matInput 
+                   [type]="hidePassword() ? 'password' : 'text'" 
+                   formControlName="password" 
+                   required>
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button 
+                    matSuffix 
+                    type="button"
+                    (click)="togglePasswordVisibility()"
+                    [attr.aria-label]="'Hide password'" 
+                    [attr.aria-pressed]="hidePassword()">
+              <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
+            </button>
+            <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+              Password is required
+            </mat-error>
+          </mat-form-field>
+
+          <div class="error-message" *ngIf="error()">
+            <mat-icon>error</mat-icon>
+            <span>{{ error() }}</span>
+          </div>
+
+          <button mat-raised-button 
+                  color="primary" 
+                  type="submit" 
+                  class="login-button full-width"
+                  [disabled]="!loginForm.valid || loading()">
+            <mat-spinner diameter="20" *ngIf="loading()"></mat-spinner>
+            <span *ngIf="!loading()">Sign In</span>
+          </button>
+        </form>
+
+        <div class="demo-credentials">
+          <h3>Demo Credentials:</h3>
+          <div class="demo-buttons">
+            <button mat-stroked-button 
+                    color="primary" 
+                    (click)="useDemoCredentials('admin')"
+                    [disabled]="loading()">
+              Admin (admin/admin123)
+            </button>
+            <button mat-stroked-button 
+                    color="accent" 
+                    (click)="useDemoCredentials('manager')"
+                    [disabled]="loading()">
+              Manager (manager/manager123)
+            </button>
+            <button mat-stroked-button 
+                    (click)="useDemoCredentials('staff')"
+                    [disabled]="loading()">
+              Staff (staff/staff123)
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
