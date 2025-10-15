@@ -1,97 +1,515 @@
 <div class="supplier-list-container">
-  <div class="header">
-    <h1>Suppliers</h1>
-    <button mat-raised-button color="primary" (click)="onAddSupplier()">
-      <mat-icon>add</mat-icon>
-      Add Supplier
-    </button>
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">
+          <mat-icon class="title-icon">business</mat-icon>
+          Suppliers
+        </h1>
+        <p class="page-subtitle">Manage your supplier relationships and partnerships</p>
+      </div>
+      
+      <div class="header-actions">
+        <button mat-stroked-button 
+                class="action-button" 
+                (click)="exportSuppliers()"
+                [disabled]="loading() || suppliers().length === 0">
+          <mat-icon>download</mat-icon>
+          Export
+        </button>
+        
+        <button mat-raised-button 
+                color="primary" 
+                class="add-button"
+                (click)="onAddSupplier()">
+          <mat-icon>add</mat-icon>
+          Add Supplier
+        </button>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid" *ngIf="analytics()">
+      <div class="stat-card">
+        <div class="stat-icon total">
+          <mat-icon>business_center</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ analytics()?.totalSuppliers || 0 }}</div>
+          <div class="stat-label">Total Suppliers</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon active">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ analytics()?.activeSuppliers || 0 }}</div>
+          <div class="stat-label">Active</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon pending">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ analytics()?.pendingSuppliers || 0 }}</div>
+          <div class="stat-label">Pending</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon rating">
+          <mat-icon>star</mat-icon>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number">{{ (analytics()?.averageRating || 0) | number:'1.1-1' }}</div>
+          <div class="stat-label">Avg Rating</div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <mat-card *ngIf="!loading() && suppliers().length > 0">
+  <!-- Filters and Search Section -->
+  <mat-card class="filters-card">
     <mat-card-content>
-      <table mat-table [dataSource]="suppliers()" class="supplier-table">
-        <!-- Name Column -->
-        <ng-container matColumnDef="name">
-          <th mat-header-cell *matHeaderCellDef>Supplier Name</th>
-          <td mat-cell *matCellDef="let supplier">
-            <div class="supplier-info">
-              <strong>{{ supplier.name }}</strong>
-              <p class="supplier-type">{{ supplier.type }}</p>
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Contact Column -->
-        <ng-container matColumnDef="contact">
-          <th mat-header-cell *matHeaderCellDef>Contact Person</th>
-          <td mat-cell *matCellDef="let supplier">{{ supplier.contactPerson || 'N/A' }}</td>
-        </ng-container>
-
-        <!-- Email Column -->
-        <ng-container matColumnDef="email">
-          <th mat-header-cell *matHeaderCellDef>Email</th>
-          <td mat-cell *matCellDef="let supplier">{{ supplier.email || 'N/A' }}</td>
-        </ng-container>
-
-        <!-- Phone Column -->
-        <ng-container matColumnDef="phone">
-          <th mat-header-cell *matHeaderCellDef>Phone</th>
-          <td mat-cell *matCellDef="let supplier">{{ supplier.phone || 'N/A' }}</td>
-        </ng-container>
-
-        <!-- Status Column -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
-          <td mat-cell *matCellDef="let supplier">
-            <span class="status-badge" [class.active]="supplier.isActive" [class.inactive]="!supplier.isActive">
-              {{ supplier.isActive ? 'Active' : 'Inactive' }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let supplier">
-            <button mat-icon-button (click)="onViewSupplier(supplier.id)" matTooltip="View Supplier">
-              <mat-icon>visibility</mat-icon>
+      <div class="filters-section">
+        <!-- Search Bar -->
+        <div class="search-section">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search suppliers...</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput 
+                   [(ngModel)]="searchQuery"
+                   (input)="onSearchChange()"
+                   placeholder="Search by name, contact, or email">
+            <button mat-icon-button 
+                    matSuffix 
+                    *ngIf="searchQuery" 
+                    (click)="clearSearch()">
+              <mat-icon>clear</mat-icon>
             </button>
-            <button mat-icon-button (click)="onEditSupplier(supplier.id)" matTooltip="Edit Supplier">
-              <mat-icon>edit</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Status</mat-label>
+            <mat-select [(ngModel)]="selectedFilters.status" 
+                        multiple 
+                        (selectionChange)="applyFilters()">
+              <mat-option value="active">Active</mat-option>
+              <mat-option value="inactive">Inactive</mat-option>
+              <mat-option value="pending-approval">Pending</mat-option>
+              <mat-option value="suspended">Suspended</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Type</mat-label>
+            <mat-select [(ngModel)]="selectedFilters.type" 
+                        multiple 
+                        (selectionChange)="applyFilters()">
+              <mat-option *ngFor="let type of supplierTypes" [value]="type.value">
+                {{ type.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Category</mat-label>
+            <mat-select [(ngModel)]="selectedFilters.category" 
+                        multiple 
+                        (selectionChange)="applyFilters()">
+              <mat-option *ngFor="let category of availableCategories" [value]="category">
+                {{ category }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Priority</mat-label>
+            <mat-select [(ngModel)]="selectedFilters.priority" 
+                        multiple 
+                        (selectionChange)="applyFilters()">
+              <mat-option value="high">High</mat-option>
+              <mat-option value="medium">Medium</mat-option>
+              <mat-option value="low">Low</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-stroked-button 
+                  class="clear-filters-btn"
+                  (click)="clearFilters()"
+                  *ngIf="hasActiveFilters()">
+            <mat-icon>clear_all</mat-icon>
+            Clear Filters
+          </button>
+        </div>
+
+        <!-- View Controls -->
+        <div class="view-controls">
+          <mat-button-toggle-group [(ngModel)]="viewMode" (change)="onViewModeChange()">
+            <mat-button-toggle value="table">
+              <mat-icon>table_rows</mat-icon>
+            </mat-button-toggle>
+            <mat-button-toggle value="grid">
+              <mat-icon>grid_view</mat-icon>
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+
+          <!-- Bulk Actions -->
+          <div class="bulk-actions" *ngIf="selectedSuppliers.length > 0">
+            <span class="selection-count">{{ selectedSuppliers.length }} selected</span>
+            <button mat-stroked-button (click)="bulkActivate()" color="primary">
+              <mat-icon>check_circle</mat-icon>
+              Activate
             </button>
-            <button mat-icon-button color="warn" (click)="onDeleteSupplier(supplier)" matTooltip="Delete Supplier">
+            <button mat-stroked-button (click)="bulkDeactivate()">
+              <mat-icon>pause_circle</mat-icon>
+              Deactivate  
+            </button>
+            <button mat-stroked-button (click)="bulkDelete()" color="warn">
               <mat-icon>delete</mat-icon>
+              Delete
             </button>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
+          </div>
+        </div>
+      </div>
     </mat-card-content>
   </mat-card>
 
+  <!-- Table View -->
+  <mat-card class="suppliers-card" *ngIf="viewMode === 'table'">
+    <mat-card-content class="table-content">
+      <div class="table-container" *ngIf="!loading() && suppliers().length > 0">
+        <table mat-table [dataSource]="suppliers()" class="suppliers-table" matSort (matSortChange)="onSort($event)">
+          
+          <!-- Selection Column -->
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+              <mat-checkbox (change)="toggleAllSelection($event)"
+                            [checked]="isAllSelected()"
+                            [indeterminate]="isPartialSelection()">
+              </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let supplier">
+              <mat-checkbox (change)="toggleSelection(supplier, $event)"
+                            [checked]="isSelected(supplier)">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+
+          <!-- Supplier Info Column -->
+          <ng-container matColumnDef="supplier">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="name">Supplier</th>
+            <td mat-cell *matCellDef="let supplier">
+              <div class="supplier-info">
+                <div class="supplier-avatar">
+                  <mat-icon>business</mat-icon>
+                </div>
+                <div class="supplier-details">
+                  <div class="supplier-name">{{ supplier.name }}</div>
+                  <div class="supplier-code">{{ supplier.supplierCode }}</div>
+                  <div class="supplier-tags">
+                    <mat-chip-set>
+                      <mat-chip *ngFor="let tag of supplier.tags.slice(0, 2)" class="tag-chip">
+                        {{ tag }}
+                      </mat-chip>
+                    </mat-chip-set>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Contact Column -->
+          <ng-container matColumnDef="contact">
+            <th mat-header-cell *matHeaderCellDef>Contact</th>
+            <td mat-cell *matCellDef="let supplier">
+              <div class="contact-info">
+                <div class="contact-name">{{ supplier.contact.contactPerson }}</div>
+                <div class="contact-email">{{ supplier.contact.email }}</div>
+                <div class="contact-phone">{{ supplier.contact.phone }}</div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Type & Category Column -->
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Type & Category</th>
+            <td mat-cell *matCellDef="let supplier">
+              <div class="type-info">
+                <div class="supplier-type">{{ getTypeLabel(supplier.type) }}</div>
+                <div class="supplier-categories">
+                  <mat-chip-set>
+                    <mat-chip *ngFor="let category of supplier.category.slice(0, 2)" 
+                              class="category-chip">
+                      {{ category }}
+                    </mat-chip>
+                  </mat-chip-set>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let supplier">
+              <div class="status-section">
+                <span class="status-badge" [ngClass]="supplier.status">
+                  <mat-icon class="status-icon">{{ getStatusIcon(supplier.status) }}</mat-icon>
+                  {{ getStatusLabel(supplier.status) }}
+                </span>
+                <div class="priority-badge" [ngClass]="supplier.priority">
+                  {{ supplier.priority | titlecase }} Priority
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Performance Column -->
+          <ng-container matColumnDef="performance">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header="rating">Performance</th>
+            <td mat-cell *matCellDef="let supplier">
+              <div class="performance-info">
+                <div class="rating-section">
+                  <div class="rating-stars">
+                    <mat-icon *ngFor="let star of getStarArray(supplier.rating)" 
+                              class="star" 
+                              [ngClass]="{ filled: star <= supplier.rating }">
+                      star
+                    </mat-icon>
+                  </div>
+                  <span class="rating-value">{{ supplier.rating | number:'1.1-1' }}</span>
+                </div>
+                <div class="metrics" *ngIf="supplier.metrics">
+                  <div class="metric-item">
+                    <span class="metric-label">Orders:</span>
+                    <span class="metric-value">{{ supplier.metrics.totalOrders }}</span>
+                  </div>
+                  <div class="metric-item">
+                    <span class="metric-label">On-time:</span>
+                    <span class="metric-value">{{ supplier.metrics.onTimeDeliveryRate }}%</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let supplier">
+              <div class="action-buttons">
+                <button mat-icon-button 
+                        (click)="onViewSupplier(supplier.id)" 
+                        matTooltip="View Details"
+                        class="action-btn view-btn">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                
+                <button mat-icon-button 
+                        (click)="onEditSupplier(supplier.id)" 
+                        matTooltip="Edit Supplier"
+                        class="action-btn edit-btn">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                
+                <button mat-icon-button 
+                        [matMenuTriggerFor]="actionMenu" 
+                        matTooltip="More Actions"
+                        class="action-btn more-btn">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+
+                <!-- Action Menu -->
+                <mat-menu #actionMenu="matMenu">
+                  <button mat-menu-item *ngIf="supplier.status === 'inactive'" (click)="activateSupplier(supplier.id)">
+                    <mat-icon>play_circle</mat-icon>
+                    <span>Activate</span>
+                  </button>
+                  <button mat-menu-item *ngIf="supplier.status === 'active'" (click)="deactivateSupplier(supplier.id)">
+                    <mat-icon>pause_circle</mat-icon>
+                    <span>Deactivate</span>
+                  </button>
+                  <button mat-menu-item (click)="duplicateSupplier(supplier)">
+                    <mat-icon>content_copy</mat-icon>
+                    <span>Duplicate</span>
+                  </button>
+                  <mat-divider></mat-divider>
+                  <button mat-menu-item (click)="onDeleteSupplier(supplier)" class="delete-action">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </div>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+          <tr mat-row *matRowDef="let supplier; columns: displayedColumns;" 
+              [class.selected-row]="isSelected(supplier)"
+              (click)="onRowClick(supplier)"></tr>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <mat-paginator *ngIf="!loading() && suppliers().length > 0"
+                     [length]="totalSuppliers()"
+                     [pageSize]="pageSize"
+                     [pageSizeOptions]="[10, 25, 50, 100]"
+                     (page)="onPageChange($event)"
+                     showFirstLastButtons>
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Grid View -->
+  <div class="suppliers-grid" *ngIf="viewMode === 'grid' && !loading() && suppliers().length > 0">
+    <div class="supplier-card" *ngFor="let supplier of suppliers(); trackBy: trackBySupplier">
+      <mat-card class="supplier-grid-card" [class.selected]="isSelected(supplier)">
+        <mat-card-header>
+          <mat-checkbox mat-card-avatar 
+                        (change)="toggleSelection(supplier, $event)"
+                        [checked]="isSelected(supplier)">
+          </mat-checkbox>
+          
+          <mat-card-title>{{ supplier.name }}</mat-card-title>
+          <mat-card-subtitle>{{ supplier.supplierCode }}</mat-card-subtitle>
+          
+          <button mat-icon-button 
+                  [matMenuTriggerFor]="cardMenu" 
+                  mat-card-actions-align="end">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+
+          <mat-menu #cardMenu="matMenu">
+            <button mat-menu-item (click)="onViewSupplier(supplier.id)">
+              <mat-icon>visibility</mat-icon>
+              <span>View</span>
+            </button>
+            <button mat-menu-item (click)="onEditSupplier(supplier.id)">
+              <mat-icon>edit</mat-icon>
+              <span>Edit</span>
+            </button>
+            <button mat-menu-item (click)="onDeleteSupplier(supplier)">
+              <mat-icon>delete</mat-icon>
+              <span>Delete</span>
+            </button>
+          </mat-menu>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="card-content">
+            <div class="status-row">
+              <span class="status-badge" [ngClass]="supplier.status">
+                {{ getStatusLabel(supplier.status) }}
+              </span>
+              <span class="priority-badge" [ngClass]="supplier.priority">
+                {{ supplier.priority | titlecase }}
+              </span>
+            </div>
+
+            <div class="contact-row">
+              <mat-icon>person</mat-icon>
+              <span>{{ supplier.contact.contactPerson }}</span>
+            </div>
+
+            <div class="contact-row">
+              <mat-icon>email</mat-icon>
+              <span>{{ supplier.contact.email }}</span>
+            </div>
+
+            <div class="contact-row">
+              <mat-icon>phone</mat-icon>
+              <span>{{ supplier.contact.phone }}</span>
+            </div>
+
+            <div class="rating-row">
+              <div class="rating-stars">
+                <mat-icon *ngFor="let star of getStarArray(supplier.rating)" 
+                          class="star" 
+                          [ngClass]="{ filled: star <= supplier.rating }">
+                  star
+                </mat-icon>
+              </div>
+              <span class="rating-text">{{ supplier.rating | number:'1.1-1' }}</span>
+            </div>
+
+            <div class="categories-row">
+              <mat-chip-set>
+                <mat-chip *ngFor="let category of supplier.category.slice(0, 3)">
+                  {{ category }}
+                </mat-chip>
+              </mat-chip-set>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Grid Pagination -->
+    <div class="grid-pagination">
+      <mat-paginator [length]="totalSuppliers()"
+                     [pageSize]="pageSize"
+                     [pageSizeOptions]="[12, 24, 48, 96]"
+                     (page)="onPageChange($event)"
+                     showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
+
+  <!-- Loading State -->
   <div class="loading-container" *ngIf="loading()">
-    <mat-card>
+    <mat-card class="loading-card">
       <mat-card-content>
         <div class="loading-content">
-          <mat-icon>business</mat-icon>
-          <p>Loading suppliers...</p>
+          <mat-spinner diameter="50"></mat-spinner>
+          <h3>Loading suppliers...</h3>
+          <p>Please wait while we fetch your supplier data</p>
         </div>
       </mat-card-content>
     </mat-card>
   </div>
 
-  <div class="empty-state" *ngIf="!loading() && suppliers().length === 0">
-    <mat-card>
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading() && suppliers().length === 0 && !hasActiveFilters()">
+    <mat-card class="empty-card">
       <mat-card-content>
         <div class="empty-content">
-          <mat-icon>business_center</mat-icon>
-          <h2>No Suppliers Found</h2>
-          <p>Get started by adding your first supplier.</p>
-          <button mat-raised-button color="primary" (click)="onAddSupplier()">
+          <div class="empty-icon">
+            <mat-icon>business_center</mat-icon>
+          </div>
+          <h2>No Suppliers Yet</h2>
+          <p>Start building your supplier network by adding your first supplier.</p>
+          <button mat-raised-button color="primary" (click)="onAddSupplier()" class="cta-button">
             <mat-icon>add</mat-icon>
-            Add First Supplier
+            Add Your First Supplier
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- No Results State -->
+  <div class="empty-state" *ngIf="!loading() && suppliers().length === 0 && hasActiveFilters()">
+    <mat-card class="empty-card">
+      <mat-card-content>
+        <div class="empty-content">
+          <div class="empty-icon">
+            <mat-icon>search_off</mat-icon>
+          </div>
+          <h2>No Results Found</h2>
+          <p>No suppliers match your current search and filter criteria.</p>
+          <button mat-stroked-button (click)="clearFilters()" class="secondary-button">
+            <mat-icon>clear_all</mat-icon>
+            Clear Filters
           </button>
         </div>
       </mat-card-content>

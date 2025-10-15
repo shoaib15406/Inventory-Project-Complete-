@@ -16,11 +16,174 @@
     </div>
 
     <div class="header-center">
-      <div class="search-bar">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-icon matPrefix>search</mat-icon>
-          <input matInput placeholder="Search products, suppliers..." />
-        </mat-form-field>
+      <div class="search-container">
+        <div class="search-bar" [class.focused]="searchFocused" [class.has-results]="searchResults().length > 0">
+          <div class="search-input-wrapper">
+            <mat-icon class="search-icon">search</mat-icon>
+            
+            <input 
+              #searchInput
+              type="text" 
+              class="search-input"
+              placeholder="Search products, suppliers, orders..."
+              [(ngModel)]="searchQuery"
+              (focus)="onSearchFocus()"
+              (blur)="onSearchBlur()"
+              (input)="onSearchInput($event)"
+              (keydown)="onSearchKeydown($event)"
+              autocomplete="off">
+
+            <!-- Voice Search Button -->
+            <button 
+              mat-icon-button 
+              class="voice-search-btn"
+              *ngIf="isVoiceSearchSupported"
+              (click)="startVoiceSearch()"
+              [class.recording]="isRecording"
+              matTooltip="Voice Search">
+              <mat-icon>{{ isRecording ? 'mic' : 'mic_none' }}</mat-icon>
+            </button>
+
+            <!-- Clear Search Button -->
+            <button 
+              mat-icon-button 
+              class="clear-search-btn"
+              *ngIf="searchQuery"
+              (click)="clearSearch()"
+              matTooltip="Clear Search">
+              <mat-icon>close</mat-icon>
+            </button>
+
+            <!-- Advanced Search Toggle -->
+            <button 
+              mat-icon-button 
+              class="filter-toggle-btn"
+              (click)="toggleFilters()"
+              [class.active]="showFilters"
+              matTooltip="Advanced Filters">
+              <mat-icon>tune</mat-icon>
+            </button>
+          </div>
+
+          <!-- Search Results Dropdown -->
+          <div class="search-dropdown" *ngIf="showSearchDropdown">
+            
+            <!-- Search Suggestions -->
+            <div class="suggestions-section" *ngIf="searchSuggestions().length > 0">
+              <div class="section-header">
+                <mat-icon>auto_awesome</mat-icon>
+                <span>Suggestions</span>
+              </div>
+              <div class="suggestion-item" 
+                   *ngFor="let suggestion of searchSuggestions(); let i = index"
+                   [class.highlighted]="highlightedIndex === i"
+                   (click)="selectSuggestion(suggestion)"
+                   (mouseenter)="highlightedIndex = i">
+                <mat-icon class="suggestion-icon">{{ suggestion.icon }}</mat-icon>
+                <div class="suggestion-content">
+                  <div class="suggestion-text">{{ suggestion.text }}</div>
+                  <div class="suggestion-category">{{ suggestion.category }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Searches -->
+            <div class="recent-section" *ngIf="recentSearches().length > 0 && !searchQuery">
+              <div class="section-header">
+                <mat-icon>history</mat-icon>
+                <span>Recent Searches</span>
+                <button mat-button class="clear-all-btn" (click)="clearRecentSearches()">Clear all</button>
+              </div>
+              <div class="recent-item" 
+                   *ngFor="let recent of recentSearches(); let i = index"
+                   [class.highlighted]="highlightedIndex === i + searchSuggestions().length"
+                   (click)="selectRecentSearch(recent)"
+                   (mouseenter)="highlightedIndex = i + searchSuggestions().length">
+                <mat-icon class="recent-icon">history</mat-icon>
+                <div class="recent-content">
+                  <div class="recent-text">{{ recent.query }}</div>
+                  <div class="recent-time">{{ recent.timestamp | date:'MMM d, h:mm a' }}</div>
+                </div>
+                <button mat-icon-button class="remove-recent-btn" (click)="removeRecentSearch(recent, $event)">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick Filters -->
+            <div class="quick-filters-section" *ngIf="!searchQuery">
+              <div class="section-header">
+                <mat-icon>filter_alt</mat-icon>
+                <span>Quick Filters</span>
+              </div>
+              <div class="quick-filters">
+                <button mat-stroked-button 
+                        class="quick-filter-chip"
+                        *ngFor="let filter of quickFilters"
+                        (click)="applyQuickFilter(filter)">
+                  <mat-icon>{{ filter.icon }}</mat-icon>
+                  {{ filter.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- No Results -->
+            <div class="no-results" *ngIf="searchQuery && searchResults().length === 0 && !isSearching">
+              <mat-icon>search_off</mat-icon>
+              <div class="no-results-text">No results found for "{{ searchQuery }}"</div>
+              <div class="no-results-suggestion">Try adjusting your search terms</div>
+            </div>
+
+            <!-- Loading -->
+            <div class="search-loading" *ngIf="isSearching">
+              <mat-icon class="loading-spinner">refresh</mat-icon>
+              <span>Searching...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Filters Panel -->
+        <div class="filters-panel" *ngIf="showFilters" [@slideDown]>
+          <div class="filters-container">
+            <div class="filter-group">
+              <label class="filter-label">Category</label>
+              <mat-select [(value)]="selectedCategory" placeholder="All categories">
+                <mat-option value="">All Categories</mat-option>
+                <mat-option value="products">Products</mat-option>
+                <mat-option value="suppliers">Suppliers</mat-option>
+                <mat-option value="orders">Orders</mat-option>
+                <mat-option value="reports">Reports</mat-option>
+              </mat-select>
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label">Date Range</label>
+              <mat-select [(value)]="selectedDateRange" placeholder="Any time">
+                <mat-option value="">Any Time</mat-option>
+                <mat-option value="today">Today</mat-option>
+                <mat-option value="week">This Week</mat-option>
+                <mat-option value="month">This Month</mat-option>
+                <mat-option value="year">This Year</mat-option>
+              </mat-select>
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label">Status</label>
+              <mat-select [(value)]="selectedStatus" placeholder="All statuses">
+                <mat-option value="">All Statuses</mat-option>
+                <mat-option value="active">Active</mat-option>
+                <mat-option value="inactive">Inactive</mat-option>
+                <mat-option value="pending">Pending</mat-option>
+                <mat-option value="completed">Completed</mat-option>
+              </mat-select>
+            </div>
+
+            <div class="filter-actions">
+              <button mat-button (click)="clearFilters()">Clear</button>
+              <button mat-raised-button color="primary" (click)="applyFilters()">Apply Filters</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

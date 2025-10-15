@@ -1,0 +1,573 @@
+<div class="add-supplier-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <button mat-icon-button (click)="onCancel()" class="back-button">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="title-text">
+          <h1 class="page-title">
+            <mat-icon class="title-icon">{{ isDuplicating ? 'content_copy' : 'add_business' }}</mat-icon>
+            {{ isDuplicating ? 'Duplicate Supplier' : 'Add New Supplier' }}
+          </h1>
+          <p class="page-subtitle">
+            {{ isDuplicating ? 'Create a new supplier based on existing data' : 'Create a new supplier profile with complete information' }}
+          </p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button mat-stroked-button (click)="onCancel()">
+          <mat-icon>close</mat-icon>
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stepper Form -->
+  <mat-card class="form-card">
+    <mat-card-content>
+      <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()">
+        <mat-stepper #stepper linear="false" orientation="horizontal">
+          
+          <!-- Step 1: Basic Information -->
+          <mat-step [stepControl]="basicInfo" label="Basic Information" icon="business">
+            <div class="step-content" formGroupName="basicInfo">
+              <div class="section-header">
+                <h2>Basic Information</h2>
+                <p>Enter the fundamental details about the supplier</p>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Supplier Name *</mat-label>
+                  <input matInput formControlName="name" placeholder="Enter supplier company name">
+                  <mat-error *ngIf="isFieldInvalid('basicInfo', 'name')">
+                    {{ getFieldError('basicInfo', 'name') }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Supplier Type *</mat-label>
+                  <mat-select formControlName="type">
+                    <mat-option *ngFor="let type of supplierTypes" [value]="type.value">
+                      {{ type.label }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="isFieldInvalid('basicInfo', 'type')">
+                    {{ getFieldError('basicInfo', 'type') }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <div class="category-section">
+                  <label class="section-label">Business Categories *</label>
+                  <div class="category-selector">
+                    <mat-form-field appearance="outline" class="category-select">
+                      <mat-label>Select categories</mat-label>
+                      <mat-select #categorySelect>
+                        <mat-option *ngFor="let category of availableCategories" 
+                                   [value]="category"
+                                   [disabled]="selectedCategories.includes(category)">
+                          {{ category }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <button mat-stroked-button 
+                            type="button"
+                            (click)="addCategory(categorySelect.value); categorySelect.value = ''">
+                      <mat-icon>add</mat-icon>
+                      Add
+                    </button>
+                  </div>
+                  
+                  <div class="selected-categories" *ngIf="selectedCategories.length > 0">
+                    <mat-chip-set>
+                      <mat-chip *ngFor="let category of selectedCategories" 
+                               (removed)="removeCategory(category)"
+                               [removable]="true">
+                        {{ category }}
+                        <mat-icon matChipRemove>cancel</mat-icon>
+                      </mat-chip>
+                    </mat-chip-set>
+                  </div>
+
+                  <div class="error-message" *ngIf="isFieldInvalid('basicInfo', 'categories')">
+                    Please select at least one category
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <button mat-raised-button color="primary" matStepperNext type="button">
+                  Next: Contact Information
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-step>
+
+          <!-- Step 2: Contact Information -->
+          <mat-step [stepControl]="contactInfo" label="Contact Information" icon="contact_phone">
+            <div class="step-content" formGroupName="contactInfo">
+              <div class="section-header">
+                <h2>Contact Information</h2>
+                <p>Provide contact details for this supplier</p>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Contact Person *</mat-label>
+                  <input matInput formControlName="contactPerson" placeholder="Primary contact name">
+                  <mat-icon matPrefix>person</mat-icon>
+                  <mat-error *ngIf="isFieldInvalid('contactInfo', 'contactPerson')">
+                    {{ getFieldError('contactInfo', 'contactPerson') }}
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Email Address *</mat-label>
+                  <input matInput type="email" formControlName="email" placeholder="contact@company.com">
+                  <mat-icon matPrefix>email</mat-icon>
+                  <mat-error *ngIf="isFieldInvalid('contactInfo', 'email')">
+                    {{ getFieldError('contactInfo', 'email') }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Phone Number *</mat-label>
+                  <input matInput formControlName="phone" placeholder="+1-555-0123">
+                  <mat-icon matPrefix>phone</mat-icon>
+                  <mat-error *ngIf="isFieldInvalid('contactInfo', 'phone')">
+                    {{ getFieldError('contactInfo', 'phone') }}
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Alternate Phone</mat-label>
+                  <input matInput formControlName="alternatePhone" placeholder="+1-555-0124">
+                  <mat-icon matPrefix>phone</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Fax Number</mat-label>
+                  <input matInput formControlName="fax" placeholder="+1-555-0125">
+                  <mat-icon matPrefix>print</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Website</mat-label>
+                  <input matInput formControlName="website" placeholder="https://www.company.com">
+                  <mat-icon matPrefix>language</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <div class="step-actions">
+                <button mat-stroked-button matStepperPrevious type="button">
+                  <mat-icon>arrow_back</mat-icon>
+                  Previous
+                </button>
+                <button mat-raised-button color="primary" matStepperNext type="button">
+                  Next: Address Information
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-step>
+
+          <!-- Step 3: Address Information -->
+          <mat-step [stepControl]="addressInfo" label="Address Information" icon="location_on">
+            <div class="step-content" formGroupName="addressInfo">
+              <div class="section-header">
+                <h2>Address Information</h2>
+                <p>Enter billing and shipping addresses</p>
+              </div>
+
+              <!-- Billing Address -->
+              <div class="address-section" formGroupName="billingAddress">
+                <h3>Billing Address *</h3>
+                
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Street Address *</mat-label>
+                    <input matInput formControlName="street" placeholder="123 Business Street">
+                    <mat-error *ngIf="isFieldInvalid('addressInfo.billingAddress', 'street')">
+                      {{ getFieldError('addressInfo.billingAddress', 'street') }}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>City *</mat-label>
+                    <input matInput formControlName="city" placeholder="Business City">
+                    <mat-error *ngIf="isFieldInvalid('addressInfo.billingAddress', 'city')">
+                      {{ getFieldError('addressInfo.billingAddress', 'city') }}
+                    </mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="quarter-width">
+                    <mat-label>State *</mat-label>
+                    <input matInput formControlName="state" placeholder="CA">
+                    <mat-error *ngIf="isFieldInvalid('addressInfo.billingAddress', 'state')">
+                      {{ getFieldError('addressInfo.billingAddress', 'state') }}
+                    </mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="quarter-width">
+                    <mat-label>ZIP Code *</mat-label>
+                    <input matInput formControlName="zipCode" placeholder="12345">
+                    <mat-error *ngIf="isFieldInvalid('addressInfo.billingAddress', 'zipCode')">
+                      {{ getFieldError('addressInfo.billingAddress', 'zipCode') }}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Country *</mat-label>
+                    <input matInput formControlName="country" placeholder="United States">
+                    <mat-error *ngIf="isFieldInvalid('addressInfo.billingAddress', 'country')">
+                      {{ getFieldError('addressInfo.billingAddress', 'country') }}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <!-- Shipping Address -->
+              <div class="address-section">
+                <div class="shipping-header">
+                  <h3>Shipping Address</h3>
+                  <mat-checkbox formControlName="sameAsShipping" (change)="onSameAsShippingChange()">
+                    Same as billing address
+                  </mat-checkbox>
+                </div>
+
+                <div formGroupName="shippingAddress" 
+                     *ngIf="!addressInfo.get('sameAsShipping')?.value" 
+                     class="shipping-form">
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Street Address</mat-label>
+                      <input matInput formControlName="street" placeholder="123 Shipping Street">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>City</mat-label>
+                      <input matInput formControlName="city" placeholder="Shipping City">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="quarter-width">
+                      <mat-label>State</mat-label>
+                      <input matInput formControlName="state" placeholder="CA">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="quarter-width">
+                      <mat-label>ZIP Code</mat-label>
+                      <input matInput formControlName="zipCode" placeholder="12345">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Country</mat-label>
+                      <input matInput formControlName="country" placeholder="United States">
+                    </mat-form-field>
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <button mat-stroked-button matStepperPrevious type="button">
+                  <mat-icon>arrow_back</mat-icon>
+                  Previous
+                </button>
+                <button mat-raised-button color="primary" matStepperNext type="button">
+                  Next: Business Information
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-step>
+
+          <!-- Step 4: Business Information -->
+          <mat-step [stepControl]="businessInfo" label="Business Information" icon="business_center">
+            <div class="step-content" formGroupName="businessInfo">
+              <div class="section-header">
+                <h2>Business Information</h2>
+                <p>Configure payment terms and financial details</p>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Payment Terms *</mat-label>
+                  <mat-select formControlName="paymentTerms">
+                    <mat-option *ngFor="let term of paymentTermsOptions" [value]="term">
+                      {{ term }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="isFieldInvalid('businessInfo', 'paymentTerms')">
+                    {{ getFieldError('businessInfo', 'paymentTerms') }}
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Currency *</mat-label>
+                  <mat-select formControlName="currency">
+                    <mat-option *ngFor="let currency of currencies" [value]="currency.code">
+                      {{ currency.code }} - {{ currency.name }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="isFieldInvalid('businessInfo', 'currency')">
+                    {{ getFieldError('businessInfo', 'currency') }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="third-width">
+                  <mat-label>Credit Limit</mat-label>
+                  <input matInput type="number" formControlName="creditLimit" placeholder="0">
+                  <span matPrefix>$&nbsp;</span>
+                  <mat-error *ngIf="isFieldInvalid('businessInfo', 'creditLimit')">
+                    {{ getFieldError('businessInfo', 'creditLimit') }}
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="third-width">
+                  <mat-label>Lead Time (Days)</mat-label>
+                  <input matInput type="number" formControlName="leadTime" placeholder="0">
+                  <mat-error *ngIf="isFieldInvalid('businessInfo', 'leadTime')">
+                    {{ getFieldError('businessInfo', 'leadTime') }}
+                  </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="third-width">
+                  <mat-label>Minimum Order Value</mat-label>
+                  <input matInput type="number" formControlName="minimumOrderValue" placeholder="0">
+                  <span matPrefix>$&nbsp;</span>
+                  <mat-error *ngIf="isFieldInvalid('businessInfo', 'minimumOrderValue')">
+                    {{ getFieldError('businessInfo', 'minimumOrderValue') }}
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Business Registration Number</mat-label>
+                  <input matInput formControlName="businessRegistrationNumber" placeholder="BRN123456">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Tax ID</mat-label>
+                  <input matInput formControlName="taxId" placeholder="TAX123456">
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>VAT Number</mat-label>
+                  <input matInput formControlName="vatNumber" placeholder="VAT123456">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>DUNS Number</mat-label>
+                  <input matInput formControlName="duns" placeholder="DUNS123456789">
+                </mat-form-field>
+              </div>
+
+              <div class="step-actions">
+                <button mat-stroked-button matStepperPrevious type="button">
+                  <mat-icon>arrow_back</mat-icon>
+                  Previous
+                </button>
+                <button mat-raised-button color="primary" matStepperNext type="button">
+                  Next: Additional Information
+                  <mat-icon>arrow_forward</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-step>
+
+          <!-- Step 5: Additional Information -->
+          <mat-step [stepControl]="additionalInfo" label="Additional Information" icon="more_horiz">
+            <div class="step-content" formGroupName="additionalInfo">
+              <div class="section-header">
+                <h2>Additional Information</h2>
+                <p>Configure status, certifications, and other details</p>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Status</mat-label>
+                  <mat-select formControlName="status">
+                    <mat-option value="active">Active</mat-option>
+                    <mat-option value="inactive">Inactive</mat-option>
+                    <mat-option value="pending-approval">Pending Approval</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Priority</mat-label>
+                  <mat-select formControlName="priority">
+                    <mat-option value="high">High</mat-option>
+                    <mat-option value="medium">Medium</mat-option>
+                    <mat-option value="low">Low</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <!-- Certifications -->
+              <div class="form-row">
+                <div class="chips-section">
+                  <label class="section-label">Certifications</label>
+                  <div class="chips-selector">
+                    <mat-form-field appearance="outline" class="chips-select">
+                      <mat-label>Select certifications</mat-label>
+                      <mat-select #certificationSelect>
+                        <mat-option *ngFor="let cert of availableCertifications" 
+                                   [value]="cert"
+                                   [disabled]="selectedCertifications.includes(cert)">
+                          {{ cert }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <button mat-stroked-button 
+                            type="button"
+                            (click)="addCertification(certificationSelect.value); certificationSelect.value = ''">
+                      <mat-icon>add</mat-icon>
+                      Add
+                    </button>
+                  </div>
+                  
+                  <div class="selected-chips" *ngIf="selectedCertifications.length > 0">
+                    <mat-chip-set>
+                      <mat-chip *ngFor="let cert of selectedCertifications" 
+                               (removed)="removeCertification(cert)"
+                               [removable]="true">
+                        {{ cert }}
+                        <mat-icon matChipRemove>cancel</mat-icon>
+                      </mat-chip>
+                    </mat-chip-set>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tags -->
+              <div class="form-row">
+                <div class="chips-section">
+                  <label class="section-label">Tags</label>
+                  <div class="chips-input">
+                    <mat-form-field appearance="outline" class="chips-field">
+                      <mat-label>Add tags</mat-label>
+                      <input matInput #tagInput placeholder="Enter tag and press Enter" 
+                             (keydown.enter)="addTag(tagInput); $event.preventDefault()">
+                    </mat-form-field>
+                    <button mat-stroked-button 
+                            type="button"
+                            (click)="addTag(tagInput)">
+                      <mat-icon>add</mat-icon>
+                      Add Tag
+                    </button>
+                  </div>
+                  
+                  <div class="selected-chips" *ngIf="supplierTags.length > 0">
+                    <mat-chip-set>
+                      <mat-chip *ngFor="let tag of supplierTags" 
+                               (removed)="removeTag(tag)"
+                               [removable]="true">
+                        {{ tag }}
+                        <mat-icon matChipRemove>cancel</mat-icon>
+                      </mat-chip>
+                    </mat-chip-set>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Shipping Methods -->
+              <div class="form-row">
+                <div class="chips-section">
+                  <label class="section-label">Shipping Methods</label>
+                  <div class="chips-input">
+                    <mat-form-field appearance="outline" class="chips-field">
+                      <mat-label>Add shipping method</mat-label>
+                      <input matInput #shippingInput placeholder="e.g., Ground, Express, Overnight" 
+                             (keydown.enter)="addShippingMethod(shippingInput); $event.preventDefault()">
+                    </mat-form-field>
+                    <button mat-stroked-button 
+                            type="button"
+                            (click)="addShippingMethod(shippingInput)">
+                      <mat-icon>add</mat-icon>
+                      Add Method
+                    </button>
+                  </div>
+                  
+                  <div class="selected-chips" *ngIf="shippingMethods.length > 0">
+                    <mat-chip-set>
+                      <mat-chip *ngFor="let method of shippingMethods" 
+                               (removed)="removeShippingMethod(method)"
+                               [removable]="true">
+                        {{ method }}
+                        <mat-icon matChipRemove>cancel</mat-icon>
+                      </mat-chip>
+                    </mat-chip-set>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notes -->
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Notes</mat-label>
+                  <textarea matInput formControlName="notes" 
+                           rows="4" 
+                           placeholder="Additional notes about this supplier..."></textarea>
+                </mat-form-field>
+              </div>
+
+              <div class="step-actions">
+                <button mat-stroked-button matStepperPrevious type="button">
+                  <mat-icon>arrow_back</mat-icon>
+                  Previous
+                </button>
+              </div>
+            </div>
+          </mat-step>
+
+        </mat-stepper>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <div class="action-buttons">
+            <button mat-stroked-button type="button" (click)="onCancel()">
+              <mat-icon>close</mat-icon>
+              Cancel
+            </button>
+            
+            <button mat-raised-button 
+                    color="primary" 
+                    type="submit"
+                    [disabled]="supplierForm.invalid || isSubmitting()">
+              <mat-spinner diameter="20" *ngIf="isSubmitting()"></mat-spinner>
+              <mat-icon *ngIf="!isSubmitting()">{{ isDuplicating ? 'content_copy' : 'save' }}</mat-icon>
+              {{ isSubmitting() ? 'Creating...' : (isDuplicating ? 'Duplicate Supplier' : 'Create Supplier') }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
