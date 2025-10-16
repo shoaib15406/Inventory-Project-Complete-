@@ -285,7 +285,15 @@
   }
 
   .category-selector,
-  .chips-selector,
+  .chips-selector {
+    margin-bottom: 12px;
+
+    .category-select,
+    .chips-select {
+      width: 100%;
+    }
+  }
+
   .chips-input {
     display: flex;
     gap: 12px;
@@ -297,8 +305,6 @@
       align-items: stretch;
     }
 
-    .category-select,
-    .chips-select,
     .chips-field {
       flex: 1;
     }
@@ -318,6 +324,31 @@
       }
 
       @media (max-width: 768px) {
+        padding: 16px 24px;
+      }
+    }
+  }
+
+  .category-button-row,
+  .chips-button-row {
+    margin-bottom: 16px;
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-weight: 500;
+      white-space: nowrap;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      @media (max-width: 768px) {
+        width: 100%;
         padding: 16px 24px;
       }
     }

@@ -1,11 +1,336 @@
 <div class="reports-container">
   <div class="header">
-    <h1>Reports & Analytics</h1>
-    <p>Generate comprehensive reports for your inventory</p>
+    <div class="header-content">
+      <div class="title-section">
+        <h1>
+          <mat-icon class="title-icon">analytics</mat-icon>
+          Reports & Analytics Dashboard
+        </h1>
+        <p>Comprehensive graphical analysis and reports for your inventory management</p>
+      </div>
+      
+      <div class="header-actions">
+      <form [formGroup]="dateRangeForm" class="date-filter">
+        <div class="date-range-container" formGroupName="dateRange">
+          <mat-form-field appearance="fill" class="date-range-field">
+            <mat-label>Report Date Range</mat-label>
+            <mat-date-range-input [rangePicker]="rangePicker">
+              <input matStartDate formControlName="start" placeholder="Start date">
+              <input matEndDate formControlName="end" placeholder="End date">
+            </mat-date-range-input>
+            <mat-datepicker-toggle matIconSuffix [for]="rangePicker">
+              <mat-icon matDatepickerToggleIcon>date_range</mat-icon>
+            </mat-datepicker-toggle>
+            <mat-date-range-picker #rangePicker>
+              <mat-date-range-picker-actions>
+                <button mat-button matDateRangePickerCancel>Cancel</button>
+                <button mat-raised-button color="primary" matDateRangePickerApply>Apply</button>
+              </mat-date-range-picker-actions>
+            </mat-date-range-picker>
+          </mat-form-field>
+          
+          <div class="quick-date-buttons">
+            <button mat-button class="quick-date-btn" (click)="setQuickDateRange(1)">Last Month</button>
+            <button mat-button class="quick-date-btn" (click)="setQuickDateRange(3)">Last 3 Months</button>
+            <button mat-button class="quick-date-btn" (click)="setQuickDateRange(12)">Last Year</button>
+          </div>
+        </div>
+        
+        <mat-form-field appearance="fill" class="report-type-field">
+          <mat-label>Report Type</mat-label>
+          <mat-select formControlName="reportType">
+            <mat-option value="overview">Overview</mat-option>
+            <mat-option value="detailed">Detailed</mat-option>
+            <mat-option value="summary">Summary</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </form>
+      
+      <div class="action-buttons">
+        <button mat-raised-button color="primary" (click)="refreshData()" class="refresh-btn">
+          <mat-icon>refresh</mat-icon>
+          Refresh Data
+        </button>
+        
+        <button mat-stroked-button color="accent" (click)="updateChartData()" class="update-btn">
+          <mat-icon>update</mat-icon>
+          Update Charts
+        </button>
+      </div>
+    </div>
+    </div>
   </div>
 
-  <mat-tab-group>
-    <mat-tab label="Stock Reports">
+  <div class="content-wrapper">
+    <div class="loading-overlay" *ngIf="loading()">
+      <div class="loading-content">
+        <mat-spinner diameter="60"></mat-spinner>
+        <h3>Loading Analytics...</h3>
+        <p>Please wait while we fetch the latest data</p>
+      </div>
+    </div>
+
+    <mat-tab-group class="reports-tabs" *ngIf="!loading()">
+    <!-- Dashboard Overview Tab -->
+    <mat-tab label="Dashboard Overview">
+      <div class="tab-content">
+        <div class="dashboard-grid">
+          <!-- Key Metrics Cards -->
+          <div class="metrics-row">
+            <mat-card class="metric-card total-products">
+              <mat-card-content>
+                <div class="metric-content">
+                  <mat-icon>inventory_2</mat-icon>
+                  <div class="metric-text">
+                    <h3>183</h3>
+                    <p>Total Products</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card low-stock">
+              <mat-card-content>
+                <div class="metric-content">
+                  <mat-icon>warning</mat-icon>
+                  <div class="metric-text">
+                    <h3>25</h3>
+                    <p>Low Stock Items</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card total-value">
+              <mat-card-content>
+                <div class="metric-content">
+                  <mat-icon>attach_money</mat-icon>
+                  <div class="metric-text">
+                    <h3>$125,450</h3>
+                    <p>Total Inventory Value</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="metric-card monthly-sales">
+              <mat-card-content>
+                <div class="metric-content">
+                  <mat-icon>trending_up</mat-icon>
+                  <div class="metric-text">
+                    <h3>$45,200</h3>
+                    <p>Monthly Sales</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="charts-grid">
+            <!-- Inventory Status Chart -->
+            <mat-card class="chart-card">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon>donut_large</mat-icon>
+                  Inventory Status Overview
+                </mat-card-title>
+                <div class="card-actions">
+                  <button mat-icon-button (click)="exportChart('inventory')">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                </div>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="chart-container">
+                  <canvas baseChart
+                          [data]="inventoryChartData"
+                          [options]="inventoryChartOptions"
+                          type="doughnut">
+                  </canvas>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <!-- Revenue vs Cost Chart -->
+            <mat-card class="chart-card">
+              <mat-card-header>
+                <mat-card-title>
+                  <mat-icon>show_chart</mat-icon>
+                  Revenue vs Cost Analysis
+                </mat-card-title>
+                <div class="card-actions">
+                  <button mat-icon-button (click)="exportChart('revenue')">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                </div>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="chart-container">
+                  <canvas baseChart
+                          [data]="revenueChartData"
+                          [options]="revenueChartOptions"
+                          type="line">
+                  </canvas>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Stock Analysis Tab -->
+    <mat-tab label="Stock Analysis">
+      <div class="tab-content">
+        <div class="charts-grid">
+          <!-- Stock Movement Trends -->
+          <mat-card class="chart-card full-width">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>timeline</mat-icon>
+                Stock Movement Trends
+              </mat-card-title>
+              <div class="card-actions">
+                <button mat-icon-button (click)="exportChart('stock-trends')">
+                  <mat-icon>download</mat-icon>
+                </button>
+              </div>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-container large">
+                <canvas baseChart
+                        [data]="stockTrendChartData"
+                        [options]="stockTrendChartOptions"
+                        type="line">
+                </canvas>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Category Distribution -->
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>pie_chart</mat-icon>
+                Category Distribution
+              </mat-card-title>
+              <div class="card-actions">
+                <button mat-icon-button (click)="exportChart('categories')">
+                  <mat-icon>download</mat-icon>
+                </button>
+              </div>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-container">
+                <canvas baseChart
+                        [data]="categoryChartData"
+                        [options]="categoryChartOptions"
+                        type="pie">
+                </canvas>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Top Products -->
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>leaderboard</mat-icon>
+                Top Selling Products
+              </mat-card-title>
+              <div class="card-actions">
+                <button mat-icon-button (click)="exportChart('top-products')">
+                  <mat-icon>download</mat-icon>
+                </button>
+              </div>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-container">
+                <canvas baseChart
+                        [data]="topProductsChartData"
+                        [options]="topProductsChartOptions"
+                        type="bar">
+                </canvas>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Supplier Analytics Tab -->
+    <mat-tab label="Supplier Analytics">
+      <div class="tab-content">
+        <div class="charts-grid">
+          <!-- Supplier Performance Radar -->
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>radar</mat-icon>
+                Supplier Performance Comparison
+              </mat-card-title>
+              <div class="card-actions">
+                <button mat-icon-button (click)="exportChart('supplier-performance')">
+                  <mat-icon>download</mat-icon>
+                </button>
+              </div>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-container">
+                <canvas baseChart
+                        [data]="supplierChartData"
+                        [options]="supplierChartOptions"
+                        type="radar">
+                </canvas>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Supplier Stats Cards -->
+          <div class="supplier-stats">
+            <mat-card class="stat-card">
+              <mat-card-content>
+                <div class="stat-content">
+                  <mat-icon color="primary">business</mat-icon>
+                  <div class="stat-text">
+                    <h3>28</h3>
+                    <p>Active Suppliers</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+              <mat-card-content>
+                <div class="stat-content">
+                  <mat-icon color="accent">star</mat-icon>
+                  <div class="stat-text">
+                    <h3>4.2</h3>
+                    <p>Avg. Rating</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+              <mat-card-content>
+                <div class="stat-content">
+                  <mat-icon color="warn">schedule</mat-icon>
+                  <div class="stat-text">
+                    <h3>7.5</h3>
+                    <p>Avg. Delivery Days</p>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Generate Reports Tab -->
+    <mat-tab label="Generate Reports">
       <div class="tab-content">
         <div class="report-grid">
           <mat-card class="report-card">
@@ -16,12 +341,16 @@
               </mat-card-title>
             </mat-card-header>
             <mat-card-content>
-              <p>Current stock levels for all products with minimum and maximum thresholds.</p>
+              <p>Comprehensive stock levels with visual charts showing current inventory status, low stock alerts, and restocking recommendations.</p>
             </mat-card-content>
             <mat-card-actions>
               <button mat-raised-button color="primary" (click)="generateReport('stock-level')">
                 <mat-icon>download</mat-icon>
                 Generate Report
+              </button>
+              <button mat-stroked-button (click)="exportChart('stock-level')">
+                <mat-icon>image</mat-icon>
+                Export Chart
               </button>
             </mat-card-actions>
           </mat-card>
@@ -29,17 +358,43 @@
           <mat-card class="report-card">
             <mat-card-header>
               <mat-card-title>
-                <mat-icon>warning</mat-icon>
-                Low Stock Alert
+                <mat-icon>trending_up</mat-icon>
+                Sales Analytics Report
               </mat-card-title>
             </mat-card-header>
             <mat-card-content>
-              <p>Products that are below minimum stock levels and need restocking.</p>
+              <p>Detailed sales performance with trend analysis, top-selling products, and revenue forecasting with interactive charts.</p>
             </mat-card-content>
             <mat-card-actions>
-              <button mat-raised-button color="warn" (click)="generateReport('low-stock')">
+              <button mat-raised-button color="primary" (click)="generateReport('sales-analytics')">
                 <mat-icon>download</mat-icon>
                 Generate Report
+              </button>
+              <button mat-stroked-button (click)="exportChart('sales-analytics')">
+                <mat-icon>image</mat-icon>
+                Export Charts
+              </button>
+            </mat-card-actions>
+          </mat-card>
+
+          <mat-card class="report-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>business</mat-icon>
+                Supplier Performance Report
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>Complete supplier evaluation with performance metrics, delivery statistics, and quality assessments in visual format.</p>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-raised-button color="primary" (click)="generateReport('supplier-performance')">
+                <mat-icon>download</mat-icon>
+                Generate Report
+              </button>
+              <button mat-stroked-button (click)="exportChart('supplier-performance')">
+                <mat-icon>image</mat-icon>
+                Export Charts
               </button>
             </mat-card-actions>
           </mat-card>
@@ -48,40 +403,20 @@
             <mat-card-header>
               <mat-card-title>
                 <mat-icon>attach_money</mat-icon>
-                Inventory Valuation
+                Financial Analysis Report
               </mat-card-title>
             </mat-card-header>
             <mat-card-content>
-              <p>Total value of inventory based on cost price and selling price.</p>
+              <p>Comprehensive financial overview including revenue trends, cost analysis, profit margins, and ROI calculations with visual charts.</p>
             </mat-card-content>
             <mat-card-actions>
-              <button mat-raised-button color="accent" (click)="generateReport('valuation')">
+              <button mat-raised-button color="primary" (click)="generateReport('financial-analysis')">
                 <mat-icon>download</mat-icon>
                 Generate Report
               </button>
-            </mat-card-actions>
-          </mat-card>
-        </div>
-      </div>
-    </mat-tab>
-
-    <mat-tab label="Movement Reports">
-      <div class="tab-content">
-        <div class="report-grid">
-          <mat-card class="report-card">
-            <mat-card-header>
-              <mat-card-title>
-                <mat-icon>trending_up</mat-icon>
-                Stock Movement History
-              </mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <p>Detailed history of all stock movements including in, out, and adjustments.</p>
-            </mat-card-content>
-            <mat-card-actions>
-              <button mat-raised-button color="primary" (click)="generateReport('movement')">
-                <mat-icon>download</mat-icon>
-                Generate Report
+              <button mat-stroked-button (click)="exportChart('financial-analysis')">
+                <mat-icon>image</mat-icon>
+                Export Charts
               </button>
             </mat-card-actions>
           </mat-card>
@@ -89,41 +424,21 @@
           <mat-card class="report-card">
             <mat-card-header>
               <mat-card-title>
-                <mat-icon>bar_chart</mat-icon>
-                Monthly Summary
+                <mat-icon>category</mat-icon>
+                Category Performance Report
               </mat-card-title>
             </mat-card-header>
             <mat-card-content>
-              <p>Monthly summary of stock movements, additions, and consumption patterns.</p>
+              <p>Category-wise analysis with performance metrics, sales distribution, and growth trends presented in interactive visualizations.</p>
             </mat-card-content>
             <mat-card-actions>
-              <button mat-raised-button color="primary" (click)="generateReport('monthly')">
+              <button mat-raised-button color="primary" (click)="generateReport('category-performance')">
                 <mat-icon>download</mat-icon>
                 Generate Report
               </button>
-            </mat-card-actions>
-          </mat-card>
-        </div>
-      </div>
-    </mat-tab>
-
-    <mat-tab label="Supplier Reports">
-      <div class="tab-content">
-        <div class="report-grid">
-          <mat-card class="report-card">
-            <mat-card-header>
-              <mat-card-title>
-                <mat-icon>business</mat-icon>
-                Supplier Performance
-              </mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <p>Performance metrics for all suppliers including delivery times and quality ratings.</p>
-            </mat-card-content>
-            <mat-card-actions>
-              <button mat-raised-button color="primary" (click)="generateReport('supplier-performance')">
-                <mat-icon>download</mat-icon>
-                Generate Report
+              <button mat-stroked-button (click)="exportChart('category-performance')">
+                <mat-icon>image</mat-icon>
+                Export Charts
               </button>
             </mat-card-actions>
           </mat-card>
@@ -131,17 +446,21 @@
           <mat-card class="report-card">
             <mat-card-header>
               <mat-card-title>
-                <mat-icon>shopping_cart</mat-icon>
-                Purchase Orders
+                <mat-icon>insights</mat-icon>
+                Executive Dashboard Report
               </mat-card-title>
             </mat-card-header>
             <mat-card-content>
-              <p>Summary of all purchase orders, pending deliveries, and order history.</p>
+              <p>High-level executive summary with key performance indicators, trend analysis, and strategic insights in a visual dashboard format.</p>
             </mat-card-content>
             <mat-card-actions>
-              <button mat-raised-button color="primary" (click)="generateReport('purchase-orders')">
+              <button mat-raised-button color="accent" (click)="generateReport('executive-dashboard')">
                 <mat-icon>download</mat-icon>
                 Generate Report
+              </button>
+              <button mat-stroked-button (click)="exportChart('executive-dashboard')">
+                <mat-icon>image</mat-icon>
+                Export All Charts
               </button>
             </mat-card-actions>
           </mat-card>
@@ -149,15 +468,5 @@
       </div>
     </mat-tab>
   </mat-tab-group>
-
-  <div class="loading-overlay" *ngIf="loading()">
-    <mat-card>
-      <mat-card-content>
-        <div class="loading-content">
-          <mat-icon>hourglass_empty</mat-icon>
-          <p>Generating report...</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
   </div>
 </div>
